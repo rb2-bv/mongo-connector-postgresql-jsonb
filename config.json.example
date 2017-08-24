@@ -1,0 +1,12 @@
+{
+    "mainAddress": "localhost:27017",
+    "verbosity": 2,
+    "logging": { "type": "stream" },
+    "docManagers": [
+        {
+            "docManager": "postgresql_jsonb_manager",
+            "targetURL": "postgresql://localhost:5432/mydb",
+            "args": { "mongoUrl": "localhost:27017" }
+        }
+    ]
+}

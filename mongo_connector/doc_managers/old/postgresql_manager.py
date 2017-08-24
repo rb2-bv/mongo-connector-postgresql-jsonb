@@ -59,8 +59,10 @@ class DocManager(DocManagerBase):
         pass
 
     def __init__(self, url, unique_key='_id', auto_commit_interval=None, chunk_size=100, **kwargs):
-        if 'mongoUrl' not in kwargs:
-            raise InvalidConfiguration("The MongoUrl parameter is mandatory.")
+        print kwargs
+
+        # if 'mongoUrl' not in kwargs:
+        #     raise InvalidConfiguration("The MongoUrl parameter is mandatory.")
 
         self.url = url
         self.unique_key = unique_key
@@ -69,7 +71,7 @@ class DocManager(DocManagerBase):
         self._formatter = DocumentFlattener()
         self.pgsql = psycopg2.connect(url)
         self.insert_accumulator = {}
-        self.client = MongoClient(kwargs['mongoUrl'])
+        # self.client = MongoClient(kwargs['mongoUrl'])
 
         register_adapter(ObjectId, object_id_adapter)
 
@@ -96,7 +98,7 @@ class DocManager(DocManagerBase):
             for collection in self.mappings[database]:
                 self.insert_accumulator[collection] = 0
 
-                with self.pgsql.cursor() as cursor:
+                with self.pgsql.cursor() as ocursor:
                     pk_found = False
                     pk_name = self.mappings[database][collection]['pk']
                     columns = ['_creationdate TIMESTAMP']
@@ -234,6 +236,8 @@ class DocManager(DocManagerBase):
             self.commit()
 
     def update(self, document_id, update_spec, namespace, timestamp):
+        # TODO update this to grab doc, apply_update, and then update (return None if doc not in Postgres)
+
         db, collection = db_and_collection(namespace)
         updated_document = self.get_document_by_id(db, collection, document_id)
 
@@ -253,7 +257,9 @@ class DocManager(DocManagerBase):
         self.commit()
 
     def get_document_by_id(self, db, collection, document_id):
-        return self.client[db][collection].find_one({'_id': document_id})
+        # TODO load this from Postgres
+
+        #return self.client[db][collection].find_one({'_id': document_id})
 
     def remove(self, document_id, namespace, timestamp):
         if not is_mapped(self.mappings, namespace):
