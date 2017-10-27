@@ -25,12 +25,13 @@ def update(cursor, table, document_id, update_spec):
         log.error("Failed to update %s with %s \n %s", document_id, update_spec, traceback.format_exc())
 
 def remove_keys(cursor, table, document_id, keys):
-    cmd = sql.SQL("update {} set jdoc=(jdoc - %s) where id = %s").format(sql.Identifier(table))
+    cmd = sql.SQL("update {} set jdoc=(jdoc #- %s) where id = %s").format(sql.Identifier(table))
     try:
         with cursor as c:
             for key in keys:
-                log.debug("Removing key {} from {}".format(key, document_id))
-                c.execute(cmd, (key, document_id))
+                json_path = '{' + key.replace('.', ',') + '}'
+                log.debug("Removing field at path {} from {}".format(json_path, document_id))
+                c.execute(cmd, (json_path, document_id))
     except Exception as e:
         log.error("Failed to remove %s from %s \n %s", keys, document_id, traceback.format_exc())
 
