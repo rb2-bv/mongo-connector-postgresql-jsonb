@@ -17,6 +17,6 @@ pg-mongo-connector.log*
 .DS_Store
 venv
 .eggs
-mongo_connector_postgresql.egg-info
+mongo_connector_postgresql_jsonb.egg-info
 .coverage
 htmlcov

@@ -1,5 +1,5 @@
 import logging
-import sql
+from . import sql
 
 log = logging.getLogger("ops")
 
