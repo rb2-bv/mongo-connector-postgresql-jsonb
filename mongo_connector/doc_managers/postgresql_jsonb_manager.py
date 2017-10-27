@@ -19,6 +19,7 @@ class DocManager(DocManagerBase):
 
     def __init__(self, url, unique_key='_id', auto_commit_interval=None, chunk_size=100, **kwargs):
         self.pg_client = psycopg2.connect(url)
+        self.pg_client.autocommit = True
 
     def stop(self):
         log.info('stop!')
@@ -32,7 +33,7 @@ class DocManager(DocManagerBase):
 
     def update(self, document_id, update_spec, namespace, timestamp):
         log.info('update! with %s' % document_id)
-        return ops.upsert(self.pg_client.cursor(), namespace, doc)
+        return ops.update(self.pg_client.cursor(), namespace, document_id, update_spec)
 
     def remove(self, document_id, namespace, timestamp):
         log.info('remove! with %s' % document_id)
@@ -44,6 +45,7 @@ class DocManager(DocManagerBase):
 
     def commit(self):
         log.info('commit!')
+        self.pg_client.commit()
         pass
 
     def get_last_doc(self):
