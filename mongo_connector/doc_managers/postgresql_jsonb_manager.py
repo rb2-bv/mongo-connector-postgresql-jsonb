@@ -23,6 +23,7 @@ class DocManager(DocManagerBase):
 
     def stop(self):
         log.info('Stopping')
+        self.pg_client.commit()
         self.pg_client.close()
 
     def upsert(self, doc, namespace, timestamp):
@@ -30,7 +31,8 @@ class DocManager(DocManagerBase):
         return ops.upsert(self.pg_client.cursor(), namespace, doc)
 
     def bulk_upsert(self, docs, namespace, timestamp):
-        log.debug('bulk_upsert! with %s' % docs)
+        for doc in docs:
+            self.upsert(doc, namespace, timestamp)
 
     def update(self, document_id, update_spec, namespace, timestamp):
         log.debug('update! with %s' % document_id)
@@ -41,7 +43,6 @@ class DocManager(DocManagerBase):
         return ops.delete(self.pg_client.cursor(), namespace, document_id)
 
     def search(self, start_ts, end_ts):
-        log.debug('search! with %s' % start_ts)
         pass
 
     def commit(self):
@@ -49,9 +50,7 @@ class DocManager(DocManagerBase):
         self.pg_client.commit()
 
     def get_last_doc(self):
-        log.debug('get_last_doc')
         pass
 
     def handle_command(self, doc, namespace, timestamp):
-        log.debug('handle_command! with %s' % doc)
         pass
