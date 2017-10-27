@@ -22,36 +22,36 @@ class DocManager(DocManagerBase):
         self.pg_client.autocommit = True
 
     def stop(self):
-        log.info('stop!')
+        log.info('Stopping')
+        self.pg_client.close()
 
     def upsert(self, doc, namespace, timestamp):
-        log.info('upsert! with %s' % doc)
+        log.debug('upsert with %s' % doc)
         return ops.upsert(self.pg_client.cursor(), namespace, doc)
 
     def bulk_upsert(self, docs, namespace, timestamp):
-        log.info('bulk_upsert! with %s' % docs)
+        log.debug('bulk_upsert! with %s' % docs)
 
     def update(self, document_id, update_spec, namespace, timestamp):
-        log.info('update! with %s' % document_id)
-        return ops.update(self.pg_client.cursor(), namespace, document_id, update_spec)
+        log.debug('update! with %s' % document_id)
+        return ops.update(self.pg_client.cursor(), document_id, update_spec, namespace)
 
     def remove(self, document_id, namespace, timestamp):
-        log.info('remove! with %s' % document_id)
+        log.debug('remove! with %s' % document_id)
         return ops.delete(self.pg_client.cursor(), namespace, document_id)
 
     def search(self, start_ts, end_ts):
-        log.info('search! with %s' % start_ts)
+        log.debug('search! with %s' % start_ts)
         pass
 
     def commit(self):
-        log.info('commit!')
+        log.info('Commiting')
         self.pg_client.commit()
-        pass
 
     def get_last_doc(self):
-        log.info('get_last_doc!')
+        log.debug('get_last_doc')
         pass
 
     def handle_command(self, doc, namespace, timestamp):
-        log.info('handle_command! with %s' % doc)
+        log.debug('handle_command! with %s' % doc)
         pass

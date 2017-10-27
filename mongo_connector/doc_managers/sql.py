@@ -16,17 +16,21 @@ def upsert(cursor, table, doc_id, doc):
     except Exception as e:
         log.error("Impossible to upsert %s to %s \n %s", doc, table, traceback.format_exc())
 
-def update(cursor, table, doc_id, doc):
-    return upsert(cursor, table, doc_id, doc)
-
-def delete(cursor, table, doc_id):
-    cmd = sql.SQL('delete from {} where id = %s').format(table)
+def update(cursor, table, document_id, update_spec):
+    cmd = sql.SQL("update {} set jdoc=(jdoc||%s) where id = %s").format(sql.Identifier(table))
     try:
         with cursor as c:
-            return c.execute(cmd, doc_id)
+            return c.execute(cmd, (Json(update_spec, dumps=dumps_json), document_id))
+    except Exception as e:
+        log.error("Failed to update %s with %s \n %s", document_id, update_spec, traceback.format_exc())
+
+def delete(cursor, table, doc_id):
+    cmd = sql.SQL('delete from {} where id = %s').format(sql.Identifier(table))
+    try:
+        with cursor as c:
+            return c.execute(cmd, (doc_id,))
     except Exception as e:
         log.error("Impossible to delete doc %s from %s \n %s", doc_id, table, traceback.format_exc())
-
 
 def dumps_json(obj):
     return json.dumps(obj, default=custom_serializer)
