@@ -8,25 +8,14 @@ A connector, built on
 [Mongo Connector](https://github.com/mongodb-labs/mongo-connector),
 to migrate data from Mongo to Postgres.
 
-For each specified collection, the connector creates the following
-schema in Postgres:
+For each specified collection, you must create the following schema in Postgres:
 
-    create database [DATABASE]
     create table [TABLE] (id string PRIMARY KEY, jdoc jsonb)
     create index [TABLE]_jdoc_gin on [TABLE] using GIN (jdoc)
 
-where [TABLE] is the Mongo collection name.
+Where `[TABLE]` is the Mongo collection name. 
 
-It is recommended to create a specific user for the connector to use. The
-simplest way to do this is:
-
-    $ create user [USER_NAME] CREATEDB LOGIN;
-
-As this user will be used to create the target database it will own
-all of the contained resources. Once done, you may want to remove the
-CREATEDB permission:
-
-    $ alter user [USER_NAME] NOCREATEDB
+E.g. for the collection `audit.accountHistory` you need to create a table called `accountHistory` and an index `accountHistory_jdoc_gin`.
 
 ## Running
 
@@ -107,10 +96,12 @@ Run the integration tests:
 
     behave
     
-You may pass non standard mongo and postgres connection strings using the enviroment variables `MONGO_URL` and `POSTGRES_URL`: 
+By default the integration tests will target `mongodb://connector:password@localhost:27017` and `postgresql://username:password@localhost:5432/target`.
+    
+You may pass custom mongo and postgres connection strings using the enviroment variables `MONGO_URL` and `POSTGRES_URL`: 
     
     MONGO_URL=mongodb://rahil:qwerty123@somehost.com:27773 POSTGRES_URL=postgresql://rahil:qwerty123@someotherhost.com:2143/customtargetdb behave
-
+    
 
 ## What is a 'DocManager'
 
