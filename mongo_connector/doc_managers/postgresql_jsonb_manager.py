@@ -34,7 +34,7 @@ class DocManager(DocManagerBase):
             self.upsert(doc, namespace, timestamp)
 
     def update(self, document_id, update_spec, namespace, timestamp):
-        log.debug('update! with %s' % document_id)
+        log.debug('update! with id: {} update_spec: {}'.format(document_id, update_spec))
         return ops.update(self.pg_client.cursor(), document_id, update_spec, namespace)
 
     def remove(self, document_id, namespace, timestamp):

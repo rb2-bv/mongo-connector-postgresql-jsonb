@@ -36,13 +36,14 @@ def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
         log.error("Impossible to upsert %s to %s \n %s", doc, table, traceback.format_exc())
 
 
-def update(cursor, table, document_id, update_spec, marshaller=default_marshaller):
-    cmd = sql.SQL("update {} set jdoc=(jdoc||%s) where id = %s").format(sql.Identifier(table))
+def update(cursor, table, document_id, update_path, new_value, marshaller=default_marshaller):
+    cmd = sql.SQL("update {} set jdoc=jsonb_set(jdoc, %s, %s::jsonb, true) where id = %s").format(sql.Identifier(table))
     try:
         with cursor as c:
-            return c.execute(cmd, (marshaller(update_spec), document_id))
+            return c.execute(cmd, (update_path, marshaller(new_value), document_id))
     except Exception as e:
-        log.error("Failed to update %s with %s \n %s", document_id, update_spec, traceback.format_exc())
+        log.error("Failed to update %s with path: %s value: %s \n %s", document_id, update_path, new_value, traceback.format_exc())
+
 
 
 def remove_keys(cursor, table, document_id, keys):

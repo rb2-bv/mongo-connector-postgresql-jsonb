@@ -30,8 +30,10 @@ def upsert(cursor, namespace, doc):
 def update(cursor, document_id, update_spec, namespace):
     table = _table_from_namespace(namespace)
     if update_spec.get("$set"):
-        update_jobject = set_fields_to_dict(update_spec)
-        sql.update(cursor, table, document_id, update_jobject)
+        updates = update_to_path_and_value(update_spec)
+        for (path, value) in updates:
+            log.debug('Updating path: {} with value: {}'.format(path, value))
+            sql.update(cursor, table, document_id, path, value)
     if update_spec.get("$unset"):
         keys_to_unset = update_spec.get("$unset").keys()
         sql.remove_keys(cursor, table, document_id, keys_to_unset)
@@ -40,6 +42,14 @@ def update(cursor, document_id, update_spec, namespace):
 def delete(cursor, namespace, doc_id):
     table = _table_from_namespace(namespace)
     return sql.delete(cursor, table, doc_id)
+
+
+def update_to_path_and_value(update_spec):
+    set_fields = update_spec.get('$set')
+    updates = []
+    for key in set_fields.keys():
+        updates.append(('{' + key.replace('.', ',') + '}', set_fields.get(key)))
+    return updates
 
 
 def set_fields_to_dict(update_spec):
