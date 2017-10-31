@@ -1,28 +1,49 @@
-import psycopg2
-from psycopg2 import sql
-from psycopg2.extras import Json
+# -*- coding: utf-8 -*-
+
 import json
 import logging
 import traceback
 from datetime import date, datetime
 
+from psycopg2 import sql
+from psycopg2.extras import Json
+
 log = logging.getLogger("psycopg2")
 
-def upsert(cursor, table, doc_id, doc):
-    cmd = sql.SQL("insert into {} (id, jdoc) values (%s, %s)").format(sql.Identifier(table))
+
+def custom_serializer(obj):
+    if isinstance(obj, (date, datetime)):
+        return obj.isoformat()
+    raise TypeError("%s is not JSON serializable" % type(obj))
+
+
+def dumps_json(obj):
+    return json.dumps(obj, default=custom_serializer)
+
+
+def default_marshaller(obj):
+    return Json(obj, dumps=dumps_json)
+
+
+def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
+    cmd = sql.SQL(
+        "insert into {} (id, jdoc) values (%s, %s) on conflict (id) do update set jdoc = %s"
+    ).format(sql.Identifier(table))
     try:
         with cursor as c:
-            return c.execute(cmd, (doc_id, Json(doc, dumps=dumps_json)))
+            return c.execute(cmd, (doc_id, marshaller(doc), marshaller(doc)))
     except Exception as e:
         log.error("Impossible to upsert %s to %s \n %s", doc, table, traceback.format_exc())
 
-def update(cursor, table, document_id, update_spec):
+
+def update(cursor, table, document_id, update_spec, marshaller=default_marshaller):
     cmd = sql.SQL("update {} set jdoc=(jdoc||%s) where id = %s").format(sql.Identifier(table))
     try:
         with cursor as c:
-            return c.execute(cmd, (Json(update_spec, dumps=dumps_json), document_id))
+            return c.execute(cmd, (marshaller(update_spec), document_id))
     except Exception as e:
         log.error("Failed to update %s with %s \n %s", document_id, update_spec, traceback.format_exc())
+
 
 def remove_keys(cursor, table, document_id, keys):
     cmd = sql.SQL("update {} set jdoc=(jdoc #- %s) where id = %s").format(sql.Identifier(table))
@@ -35,6 +56,7 @@ def remove_keys(cursor, table, document_id, keys):
     except Exception as e:
         log.error("Failed to remove %s from %s \n %s", keys, document_id, traceback.format_exc())
 
+
 def delete(cursor, table, doc_id):
     cmd = sql.SQL('delete from {} where id = %s').format(sql.Identifier(table))
     try:
@@ -42,11 +64,3 @@ def delete(cursor, table, doc_id):
             return c.execute(cmd, (doc_id,))
     except Exception as e:
         log.error("Impossible to delete doc %s from %s \n %s", doc_id, table, traceback.format_exc())
-
-def dumps_json(obj):
-    return json.dumps(obj, default=custom_serializer)
-
-def custom_serializer(obj):
-    if isinstance(obj, (date, datetime)):
-        return obj.isoformat()
-    raise TypeError ("%s is not JSON serializable" % type(obj))

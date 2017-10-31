@@ -54,10 +54,17 @@ Then run:
 
 ## Testing and local development
 
+### Unit Tests
+
+- Run `python3 setup.py test`
+
+### Integration Tests
+
 You'll need:
 
 * a running mongo instance as source
 * a running Postgres as target
+* `[behave](http://pythonhosted.org/behave/)` (`pip install behave`)
 
 Optionally, but recommended:
 
@@ -65,10 +72,9 @@ Optionally, but recommended:
 dependencies (a good guide also
 [here](http://docs.python-guide.org/en/latest/dev/virtualenvs/)
 
-### Mongo
+#### Mongo
 
-To setup a replica set locally for testing, install Mongo locally and
-start as a replica set:
+To setup a replica set locally for testing, install Mongo locally and start as a replica set:
 
     $ mongod --replSet singleNodeRepl
 
@@ -86,41 +92,25 @@ Then, in the mongo shell:
 
     rs.initiate(rsconf)
 
-And insert some example docs:
+Create a mongo user for user by the integration tests:
+    
+    db.createUser({user: "connector", pwd: "password", roles: [{role: "read", db: "local"}, {role: "dbAdmin", db: "database"}]})
+    
+#### Postgres
 
-    db.test.insert({"name": "Mongo Connector test"})
+* Run postgresql on port 5432 and create an admin user with the username `username` and password `password`. 
+* Create the target database `target`: `create database target;`
 
-### Postgres
+### Run the tests
 
-Install Postgres and create a user with CREATEDB privileges.
+Run the integration tests: 
 
+    behave
+    
+You may pass non standard mongo and postgres connection strings using the enviroment variables `MONGO_URL` and `POSTGRES_URL`: 
+    
+    MONGO_URL=mongodb://rahil:qwerty123@somehost.com:27773 POSTGRES_URL=postgresql://rahil:qwerty123@someotherhost.com:2143/customtargetdb behave
 
-
-
-Then run like:
-
-    mongo-connector -c config.json
-
-where config.json looks like:
-
-and mappings.json looks like:
-
-{
-    "synctest": {
-        "test": {
-            "pk":"id",
-            "_id":{
-                "dest":"id",
-                "type":"TEXT"
-            },
-            "name": {
-                "type":"TEXT",
-                "index": false,
-            },
-
-        }
-    }
-}
 
 ## What is a 'DocManager'
 

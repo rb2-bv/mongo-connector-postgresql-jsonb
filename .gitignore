@@ -5,6 +5,7 @@ dist
 build
 MANIFEST
 mongo-connector.log
+mongo-connector.log*
 oplog.timestamp
 mappings.json
 mappings_bak.json

@@ -1,21 +1,20 @@
-import traceback
+# -*- coding: utf-8 -*-
+
 import logging
 
 import psycopg2
 from mongo_connector.doc_managers.doc_manager_base import DocManagerBase
 
-import ops
-
-from mongo_connector.doc_managers.sql import (
-    upsert,
-    update,
-    delete
-)
+from . import ops
 
 log = logging.getLogger(__name__)
 
+
 class DocManager(DocManagerBase):
     """DocManager that connects to Postgres"""
+
+    def insert_file(self, f, namespace, timestamp):
+        pass
 
     def __init__(self, url, unique_key='_id', auto_commit_interval=None, chunk_size=100, **kwargs):
         self.pg_client = psycopg2.connect(url)

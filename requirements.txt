@@ -1,2 +1,6 @@
+psutil
+pymongo
+behave
+mock
 mongo_connector==2.5.1
 psycopg2==2.7.3.2
