@@ -45,7 +45,6 @@ def update(cursor, table, document_id, update_path, new_value, marshaller=defaul
         log.error("Failed to update %s with path: %s value: %s \n %s", document_id, update_path, new_value, traceback.format_exc())
 
 
-
 def remove_keys(cursor, table, document_id, keys):
     cmd = sql.SQL("update {} set jdoc=(jdoc #- %s) where id = %s").format(sql.Identifier(table))
     try:

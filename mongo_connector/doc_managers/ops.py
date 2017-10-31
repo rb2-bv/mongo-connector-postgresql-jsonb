@@ -50,33 +50,3 @@ def update_to_path_and_value(update_spec):
     for key in set_fields.keys():
         updates.append(('{' + key.replace('.', ',') + '}', set_fields.get(key)))
     return updates
-
-
-def set_fields_to_dict(update_spec):
-    sanitized_update = {}
-    set_fields = update_spec.get("$set")
-    for key in set_fields.keys():
-        elements = key.split('.')
-        elements.reverse()
-        if len(elements) > 1:
-            nested_update = {}
-            for element in elements:
-                if not nested_update:
-                    nested_update = {element: set_fields.get(key)}
-                else:
-                    nested_update = {element: nested_update}
-            sanitized_update = deep_merge(nested_update, sanitized_update)
-        else:
-            sanitized_update = deep_merge({key: set_fields.get(key)}, sanitized_update)
-    log.debug("Converted mongo update spec {} to dict {}".format(update_spec, sanitized_update))
-    return sanitized_update
-
-
-def deep_merge(source, destination):
-    for key, value in source.items():
-        if isinstance(value, dict):
-            node = destination.setdefault(key, {})
-            deep_merge(value, node)
-        else:
-            destination[key] = value
-    return destination

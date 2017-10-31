@@ -64,12 +64,11 @@ class TestSql(TestCase):
 
     def test_update(self):
         cursor_wrapper, cursor_mock = self.mock_cursor()
-        document = {'foo': 'bar', "box": {'life': 42}}
         expected_sql = psql.Composed(
-            [psql.SQL('update '), psql.Identifier('users'), psql.SQL(' set jdoc=(jdoc||%s) where id = %s')]
+            [psql.SQL('update '), psql.Identifier('users'), psql.SQL(' set jdoc=jsonb_set(jdoc, %s, %s::jsonb, true) where id = %s')]
         )
-        sql.update(cursor_wrapper, 'users', '1234', document, self.identity_marshaller)
-        cursor_mock.execute.assert_called_with(expected_sql, (document, '1234'))
+        sql.update(cursor_wrapper, 'users', '1234', '{details,email}', 'foo@example.com', self.identity_marshaller)
+        cursor_mock.execute.assert_called_with(expected_sql, ('{details,email}', 'foo@example.com', '1234'))
 
 
 if __name__ == '__main__':
