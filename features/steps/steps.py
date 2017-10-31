@@ -43,15 +43,8 @@ def step_impl(context):
 
 @given(u'the jsonb connector is running targeting the mongo collection \'database.collection1\'')
 def step_impl(context):
-    cmd = 'PYTHONPATH={} mongo-connector -m {} -t {} -n \'database.collection1\' -d postgresql_jsonb_manager -v'.format(
-        context.project_root, context.mongo_url, context.postgres_url
-    )
-    print('Starting connector with command {}'.format(cmd))
-    context.mongo_connector = subprocess.Popen(
-        cmd,
-        shell=True,
-        cwd=context.project_root
-    )
+    # setup in environment.py before_all
+    assert context.mongo_connector.poll() is None
 
 
 @step("there is an empty postgres table named 'collection1'")

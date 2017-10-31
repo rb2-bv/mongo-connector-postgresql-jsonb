@@ -54,6 +54,7 @@ You'll need:
 * a running mongo instance as source
 * a running Postgres as target
 * `[behave](http://pythonhosted.org/behave/)` (`pip install behave`)
+* `docker`, `docker-compose`
 
 Optionally, but recommended:
 
@@ -61,34 +62,11 @@ Optionally, but recommended:
 dependencies (a good guide also
 [here](http://docs.python-guide.org/en/latest/dev/virtualenvs/)
 
-#### Mongo
+### Start dependencies with docker
 
-To setup a replica set locally for testing, install Mongo locally and start as a replica set:
-
-    $ mongod --replSet singleNodeRepl
-
-Then, in the mongo shell:
-
-    rsconf = {
-        _id: "singleNodeRepl",
-        members: [
-            {
-                _id: 0,
-                host: "localhost:27017"
-            }
-        ]
-    }
-
-    rs.initiate(rsconf)
-
-Create a mongo user for user by the integration tests:
-    
-    db.createUser({user: "connector", pwd: "password", roles: [{role: "read", db: "local"}, {role: "dbAdmin", db: "database"}]})
-    
-#### Postgres
-
-* Run postgresql on port 5432 and create an admin user with the username `username` and password `password`. 
-* Create the target database `target`: `create database target;`
+* from the project root run `docker-compose up -d`.
+* postgres will bind to port `5442` and mongodb to `27108`.
+* a postgres database `target` will be created, and a user `username` with password `password`
 
 ### Run the tests
 
@@ -96,13 +74,17 @@ Run the integration tests:
 
     behave
     
-By default the integration tests will target `mongodb://connector:password@localhost:27017` and `postgresql://username:password@localhost:5432/target`.
+By default the integration tests will target `mongodb://localhost:27018` and `postgresql://username:password@localhost:5442/target`.
     
-You may pass custom mongo and postgres connection strings using the enviroment variables `MONGO_URL` and `POSTGRES_URL`: 
+If not using docker to run the dependencies as described above you may pass custom mongo and postgres connection strings using the environment variables `MONGO_URL` and `POSTGRES_URL`: 
     
     MONGO_URL=mongodb://rahil:qwerty123@somehost.com:27773 POSTGRES_URL=postgresql://rahil:qwerty123@someotherhost.com:2143/customtargetdb behave
     
+Finally clean up the docker containers we ran: 
 
+    docker-compose down
+    
+    
 ## What is a 'DocManager'
 
 Mongo Connector uses a doc manager to manage replication. Our one

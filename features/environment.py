@@ -1,10 +1,11 @@
 import os
 import psutil
+import subprocess
 from pymongo import MongoClient
 
 
-MONGO_URL = 'mongodb://connector:password@localhost:27017'
-POSTGRES_URL = 'postgresql://username:password@localhost:5432/target'
+MONGO_URL = 'mongodb://localhost:27017'
+POSTGRES_URL = 'postgresql://username:password@localhost:5442/target'
 
 
 def before_all(context):
@@ -12,6 +13,15 @@ def before_all(context):
     context.mongo_url = os.getenv('MONGO_URL', MONGO_URL)
     context.postgres_url = os.getenv('POSTGRES_URL', POSTGRES_URL)
     context.project_root = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir))
+    cmd = 'PYTHONPATH={} mongo-connector -m {} -t {} -n \'database.collection1\' -d postgresql_jsonb_manager -v'.format(
+        context.project_root, context.mongo_url, context.postgres_url
+    )
+    print('Starting connector with command {}'.format(cmd))
+    context.mongo_connector = subprocess.Popen(
+        cmd,
+        shell=True,
+        cwd=context.project_root
+    )
 
 
 def before_scenario(context, scenario):
