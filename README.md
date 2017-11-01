@@ -43,47 +43,8 @@ Then run:
 
 ## Testing and local development
 
-### Unit Tests
-
-- Run `python3 setup.py test`
-
-### Integration Tests
-
-You'll need:
-
-* a running mongo instance as source
-* a running Postgres as target
-* `[behave](http://pythonhosted.org/behave/)` (`pip install behave`)
-* `docker`, `docker-compose`
-
-Optionally, but recommended:
-
-* [pipenv](https://docs.pipenv.org/en/latest/) to manage Python
-dependencies (a good guide also
-[here](http://docs.python-guide.org/en/latest/dev/virtualenvs/)
-
-### Start dependencies with docker
-
-* from the project root run `docker-compose up -d`.
-* postgres will bind to port `5442` and mongodb to `27017`.
-* a postgres database `target` will be created, and a user `username` with password `password`
-
-### Run the tests
-
-Run the integration tests: 
-
-    behave
-    
-By default the integration tests will target `mongodb://localhost:27017` and `postgresql://username:password@localhost:5442/target`.
-    
-If not using docker to run the dependencies as described above you may pass custom mongo and postgres connection strings using the environment variables `MONGO_URL` and `POSTGRES_URL`: 
-    
-    MONGO_URL=mongodb://rahil:qwerty123@somehost.com:27773 POSTGRES_URL=postgresql://rahil:qwerty123@someotherhost.com:2143/customtargetdb behave
-    
-Finally clean up the docker containers we ran: 
-
-    docker-compose down
-    
+* Ensure you have `docker` installed and ports `27018` and `5442` are available. 
+* Run `build.sh` to execute unit and integration tests. 
     
 ## What is a 'DocManager'
 

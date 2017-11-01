@@ -4,7 +4,7 @@ import subprocess
 from pymongo import MongoClient
 
 
-MONGO_URL = 'mongodb://localhost:27017'
+MONGO_URL = 'mongodb://localhost:27018'
 POSTGRES_URL = 'postgresql://username:password@localhost:5442/target'
 
 

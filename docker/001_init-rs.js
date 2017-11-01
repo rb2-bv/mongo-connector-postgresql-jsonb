@@ -1,9 +1,10 @@
+// initialize the replica set used by the integration tests
 var conf = {
     _id: "singleNodeRepl",
     members: [
         {
             _id: 0,
-            host: "localhost:27017"
+            host: "mongo:27018"
         }
     ]
 };
