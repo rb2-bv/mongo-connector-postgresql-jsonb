@@ -5,6 +5,7 @@ dist
 build
 MANIFEST
 mongo-connector.log
+mongo-connector.log*
 oplog.timestamp
 mappings.json
 mappings_bak.json
@@ -17,6 +18,6 @@ pg-mongo-connector.log*
 .DS_Store
 venv
 .eggs
-mongo_connector_postgresql.egg-info
+mongo_connector_postgresql_jsonb.egg-info
 .coverage
 htmlcov

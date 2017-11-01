@@ -8,25 +8,14 @@ A connector, built on
 [Mongo Connector](https://github.com/mongodb-labs/mongo-connector),
 to migrate data from Mongo to Postgres.
 
-For each specified collection, the connector creates the following
-schema in Postgres:
+For each specified collection, you must create the following schema in Postgres:
 
-    create database [DATABASE]
     create table [TABLE] (id string PRIMARY KEY, jdoc jsonb)
     create index [TABLE]_jdoc_gin on [TABLE] using GIN (jdoc)
 
-where [TABLE] is the Mongo collection name.
+Where `[TABLE]` is the Mongo collection name. 
 
-It is recommended to create a specific user for the connector to use. The
-simplest way to do this is:
-
-    $ create user [USER_NAME] CREATEDB LOGIN;
-
-As this user will be used to create the target database it will own
-all of the contained resources. Once done, you may want to remove the
-CREATEDB permission:
-
-    $ alter user [USER_NAME] NOCREATEDB
+E.g. for the collection `audit.accountHistory` you need to create a table called `accountHistory` and an index `accountHistory_jdoc_gin`.
 
 ## Running
 
@@ -54,74 +43,9 @@ Then run:
 
 ## Testing and local development
 
-You'll need:
-
-* a running mongo instance as source
-* a running Postgres as target
-
-Optionally, but recommended:
-
-* [pipenv](https://docs.pipenv.org/en/latest/) to manage Python
-dependencies (a good guide also
-[here](http://docs.python-guide.org/en/latest/dev/virtualenvs/)
-
-### Mongo
-
-To setup a replica set locally for testing, install Mongo locally and
-start as a replica set:
-
-    $ mongod --replSet singleNodeRepl
-
-Then, in the mongo shell:
-
-    rsconf = {
-        _id: "singleNodeRepl",
-        members: [
-            {
-                _id: 0,
-                host: "localhost:27017"
-            }
-        ]
-    }
-
-    rs.initiate(rsconf)
-
-And insert some example docs:
-
-    db.test.insert({"name": "Mongo Connector test"})
-
-### Postgres
-
-Install Postgres and create a user with CREATEDB privileges.
-
-
-
-
-Then run like:
-
-    mongo-connector -c config.json
-
-where config.json looks like:
-
-and mappings.json looks like:
-
-{
-    "synctest": {
-        "test": {
-            "pk":"id",
-            "_id":{
-                "dest":"id",
-                "type":"TEXT"
-            },
-            "name": {
-                "type":"TEXT",
-                "index": false,
-            },
-
-        }
-    }
-}
-
+* Ensure you have `docker` installed and ports `27018` and `5442` are available. 
+* Run `build.sh` to execute unit and integration tests. 
+    
 ## What is a 'DocManager'
 
 Mongo Connector uses a doc manager to manage replication. Our one
