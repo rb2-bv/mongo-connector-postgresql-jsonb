@@ -13,13 +13,8 @@ services:
     mongo:
         image: mongo:3.5.13-jessie
         restart: always
-#        environment:
-#          - MONGO_INITDB_USER=root
-#          - MONGO_INITDB_PASSWORD=password
-#          - MONGO_INITDB_DATABASE=database
         ports:
             - 27017:27017
         volumes:
           - ./docker/001_init-rs.js:/docker-entrypoint-initdb.d/001_init-rs.js
-#          - ./docker/002_create-users.js:/docker-entrypoint-initdb.d/002_create-users.js
         command: 'docker-entrypoint.sh mongod --replSet singleNodeRepl --bind_ip_all'

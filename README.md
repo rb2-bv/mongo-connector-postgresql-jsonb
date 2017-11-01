@@ -65,7 +65,7 @@ dependencies (a good guide also
 ### Start dependencies with docker
 
 * from the project root run `docker-compose up -d`.
-* postgres will bind to port `5442` and mongodb to `27108`.
+* postgres will bind to port `5442` and mongodb to `27017`.
 * a postgres database `target` will be created, and a user `username` with password `password`
 
 ### Run the tests
@@ -74,7 +74,7 @@ Run the integration tests:
 
     behave
     
-By default the integration tests will target `mongodb://localhost:27018` and `postgresql://username:password@localhost:5442/target`.
+By default the integration tests will target `mongodb://localhost:27017` and `postgresql://username:password@localhost:5442/target`.
     
 If not using docker to run the dependencies as described above you may pass custom mongo and postgres connection strings using the environment variables `MONGO_URL` and `POSTGRES_URL`: 
     
