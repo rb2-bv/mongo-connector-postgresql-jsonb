@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 function cleanup {
   echo 'Removing Postgres & Mongo'
   docker rm --force mongo
