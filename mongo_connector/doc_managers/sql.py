@@ -7,6 +7,7 @@ from datetime import date, datetime
 
 from psycopg2 import sql
 from psycopg2.extras import Json
+from bson.objectid import ObjectId
 
 log = logging.getLogger("psycopg2")
 
@@ -14,6 +15,8 @@ log = logging.getLogger("psycopg2")
 def custom_serializer(obj):
     if isinstance(obj, (date, datetime)):
         return obj.isoformat()
+    elif isinstance(obj, ObjectId):
+        return str(obj)
     raise TypeError("%s is not JSON serializable" % type(obj))
 
 

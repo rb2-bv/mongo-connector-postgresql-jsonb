@@ -37,3 +37,8 @@ Feature: Mongo Postgres Jsonb Connector
     Given a document exists with a nested value in mongodb and postgres
     When a nested field in the document is updated in mongo
     Then the nested field is updated in postgres
+
+  Scenario: ObjectIds are stored as strings
+    Given a document is inserted into mongo with an ObjectId '_id' field
+    When the document is copied to postgres
+    Then the '_id' field is stored as a string

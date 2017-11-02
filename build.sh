@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
+set -x 
 function cleanup {
+    if [ ! $? -eq 0 ]; then
+        echo 'Build Failure Detected, mongo-connector.log output:'
+        cat mongo-connector.log || true
+    fi
   echo 'Removing Postgres & Mongo'
   docker rm --force mongo
   docker rm --force postgres

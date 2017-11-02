@@ -9,7 +9,7 @@ from behave import *
 from hamcrest import assert_that, equal_to
 from psycopg2 import sql
 from pymongo import MongoClient
-
+from bson.objectid import ObjectId
 
 def eventually(f, step_time_seconds=1.0, max_trys=20, current_try=0):
     try:
@@ -233,3 +233,36 @@ def step_impl(context):
         find_by_id_and_assert_equal(context, context.document_id_that_exists, expected_doc)
 
     eventually(check_updated)
+
+
+@given("a document is inserted into mongo with an ObjectId '_id' field")
+def step_impl(context):
+    document = {
+        '_id': ObjectId(),
+        'singleValue': 42
+    }
+    context.document_id_that_exists = context.mongo_col.insert_one(document).inserted_id
+    context.document = document
+
+
+@when("the document is copied to postgres")
+def step_impl(context):
+    def document_copied_to_postgres():
+        with context.pg_client.cursor() as cursor:
+            cursor.execute(sql.SQL('select count(*) from collection1 where id=%s'),
+                           (str(context.document_id_that_exists),))
+            count = cursor.fetchone()[0]
+            assert_that(count, equal_to(1))
+
+    eventually(document_copied_to_postgres)
+
+
+@then("the '_id' field is stored as a string")
+def step_impl(context):
+    expected_document = context.document
+    expected_document['_id'] = str(context.document_id_that_exists)
+
+    def check_id_is_a_string():
+        find_by_id_and_assert_equal(context,str(context.document_id_that_exists), expected_document)
+
+    eventually(check_id_is_a_string)

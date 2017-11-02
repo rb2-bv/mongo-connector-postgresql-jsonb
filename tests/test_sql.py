@@ -6,6 +6,7 @@ from mongo_connector.doc_managers import sql
 from mock import MagicMock, Mock
 from datetime import datetime
 from psycopg2.extras import Json as PsyCopJson
+from bson.objectid import ObjectId
 
 
 class TestSql(TestCase):
@@ -69,6 +70,11 @@ class TestSql(TestCase):
         )
         sql.update(cursor_wrapper, 'users', '1234', '{details,email}', 'foo@example.com', self.identity_marshaller)
         cursor_mock.execute.assert_called_with(expected_sql, ('{details,email}', 'foo@example.com', '1234'))
+
+    def test_custom_serializer_objectid(self):
+        oid = ObjectId()
+        self.assertEqual(sql.custom_serializer(oid), str(oid))
+
 
 
 if __name__ == '__main__':
