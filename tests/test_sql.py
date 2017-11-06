@@ -82,7 +82,7 @@ class TestSql(TestCase):
              psql.SQL(' on conflict (id) do update set jdoc = excluded.jdoc')]
         )
         sql.bulk_upsert(cursor_wrapper, 'users', [('1234', {'foo': 'bar'})], self.identity_marshaller)
-        cursor_mock.execute.assert_called_with(expected_sql)
+        cursor_wrapper.execute.assert_called_with(expected_sql)
 
     def test_custom_serializer_objectid(self):
         oid = ObjectId()

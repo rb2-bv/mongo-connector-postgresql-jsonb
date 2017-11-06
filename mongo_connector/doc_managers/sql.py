@@ -40,8 +40,7 @@ def bulk_upsert(cursor, table, docs, marshaller=default_marshaller):
         "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
     ).format(sql.Identifier(table), sql.SQL(insert_string))
     try:
-        with cursor as c:
-            return c.execute(cmd)
+        return cursor.execute(cmd)
     except Exception as e:
         log.error("Impossible to bulk upsert %s documents to %s \n %s", len(docs), table, traceback.format_exc())
 

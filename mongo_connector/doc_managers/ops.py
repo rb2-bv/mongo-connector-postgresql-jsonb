@@ -36,12 +36,13 @@ def split_every(n, iterable):
 
 def bulk_upsert(cursor, docs, namespace, timestamp):
     try:
-        for chunk in split_every(500, docs):
-            upserts = []
-            for doc in chunk:
-                upserts.append((_id_from_doc(doc), doc))
-            table = _table_from_namespace(namespace)
-            sql.bulk_upsert(cursor, table, upserts)
+        with cursor as c:
+            for chunk in split_every(500, docs):
+                upserts = []
+                for doc in chunk:
+                    upserts.append((_id_from_doc(doc), doc))
+                table = _table_from_namespace(namespace)
+                sql.bulk_upsert(c, table, upserts)
     except Exception as e:
         raise e
 
