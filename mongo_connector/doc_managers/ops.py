@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import logging
+
 from . import sql
 from bson.objectid import ObjectId
+from itertools import islice
 
 log = logging.getLogger("ops")
 
@@ -21,6 +23,27 @@ def _table_from_namespace(namespace):
         return collection.lower()  # TODO consider clashes if collection name shared across dbs
     except ValueError:
         raise ValueError('Namespaces must be of the form namespace.collection, got:{}'.format(namespace))
+
+
+def split_every(n, iterable):
+    # https://stackoverflow.com/questions/1915170
+    i = iter(iterable)
+    piece = list(islice(i, n))
+    while piece:
+        yield piece
+        piece = list(islice(i, n))
+
+
+def bulk_upsert(cursor, docs, namespace, timestamp):
+    try:
+        for chunk in split_every(500, docs):
+            upserts = []
+            for doc in chunk:
+                upserts.append((_id_from_doc(doc), doc))
+            table = _table_from_namespace(namespace)
+            return sql.bulk_upsert(cursor, table, upserts)
+    except Exception as e:
+        raise e
 
 
 def upsert(cursor, namespace, doc):

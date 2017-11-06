@@ -28,6 +28,24 @@ def default_marshaller(obj):
     return Json(obj, dumps=dumps_json)
 
 
+def bulk_upsert(cursor, table, docs, marshaller=default_marshaller):
+    inserts = []
+    for id, doc in docs:
+        inserts.append(
+            cursor.mogrify("(%s, %s)", (id, marshaller(doc))).decode()
+        )
+    log.debug(inserts)
+    insert_string = ','.join(inserts)
+    cmd = sql.SQL(
+        "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
+    ).format(sql.Identifier(table), sql.SQL(insert_string))
+    try:
+        with cursor as c:
+            return c.execute(cmd)
+    except Exception as e:
+        log.error("Impossible to bulk upsert %s documents to %s \n %s", len(docs), table, traceback.format_exc())
+
+
 def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
     cmd = sql.SQL(
         "insert into {} (id, jdoc) values (%s, %s) on conflict (id) do update set jdoc = %s"

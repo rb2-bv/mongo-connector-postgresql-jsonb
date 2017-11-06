@@ -19,6 +19,7 @@ class TestSql(TestCase):
         cursor_wrapper = MagicMock()
         cursor_mock = MagicMock()
         cursor_wrapper.__enter__ = Mock(return_value=cursor_mock)
+        cursor_wrapper.mogrify = Mock(return_value=b'mogrified')
         cursor_mock.execute.return_value = [1]
         return cursor_wrapper, cursor_mock
 
@@ -70,6 +71,18 @@ class TestSql(TestCase):
         )
         sql.update(cursor_wrapper, 'users', '1234', '{details,email}', 'foo@example.com', self.identity_marshaller)
         cursor_mock.execute.assert_called_with(expected_sql, ('{details,email}', 'foo@example.com', '1234'))
+
+    def test_bulk_upsert(self):
+        cursor_wrapper, cursor_mock = self.mock_cursor()
+        expected_sql = psql.Composed(
+            [psql.SQL('insert into '),
+             psql.Identifier('users'),
+             psql.SQL(' (id, jdoc) values '),
+             psql.SQL('mogrified'),
+             psql.SQL(' on conflict (id) do update set jdoc = excluded.jdoc')]
+        )
+        sql.bulk_upsert(cursor_wrapper, 'users', [('1234', {'foo': 'bar'})], self.identity_marshaller)
+        cursor_mock.execute.assert_called_with(expected_sql)
 
     def test_custom_serializer_objectid(self):
         oid = ObjectId()

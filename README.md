@@ -43,8 +43,9 @@ Then run:
 
 ## Testing and local development
 
-* Ensure you have `docker` installed and ports `27018` and `5442` are available. 
-* Run `build.sh` to execute unit and integration tests. 
+* Ensure you have `docker` installed. 
+* Run `build.sh` to execute unit and integration tests.
+* To manually execute unit tests run `python3 setup.py test` 
     
 ## What is a 'DocManager'
 

@@ -30,8 +30,7 @@ class DocManager(DocManagerBase):
         return ops.upsert(self.pg_client.cursor(), namespace, doc)
 
     def bulk_upsert(self, docs, namespace, timestamp):
-        for doc in docs:
-            self.upsert(doc, namespace, timestamp)
+        return ops.bulk_upsert(self.pg_client.cursor(), docs, namespace, timestamp)
 
     def update(self, document_id, update_spec, namespace, timestamp):
         log.debug('update! with id: {} update_spec: {}'.format(document_id, update_spec))
