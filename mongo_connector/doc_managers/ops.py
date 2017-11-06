@@ -10,12 +10,7 @@ log = logging.getLogger("ops")
 def _id_from_doc(doc):
     try:
         id = doc['_id']  # TODO support object ID as well
-        if isinstance(id, str):
-            return id
-        elif isinstance(id, ObjectId):
-            return str(id)
-        else:
-            raise TypeError("Unsupported _id type {}".format(type(id)))
+        return str(id)
     except KeyError:
         raise ValueError('Document did not contain an `_id` key. \n {}'.format(doc))
 
