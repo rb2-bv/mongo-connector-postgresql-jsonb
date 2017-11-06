@@ -23,7 +23,7 @@ def _id_from_doc(doc):
 def _table_from_namespace(namespace):
     try:
         db, collection = namespace.split('.', 1)
-        return collection  # TODO consider clashes if collection name shared across dbs
+        return collection.lower()  # TODO consider clashes if collection name shared across dbs
     except ValueError:
         raise ValueError('Namespaces must be of the form namespace.collection, got:{}'.format(namespace))
 

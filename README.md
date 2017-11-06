@@ -13,9 +13,9 @@ For each specified collection, you must create the following schema in Postgres:
     create table [TABLE] (id string PRIMARY KEY, jdoc jsonb)
     create index [TABLE]_jdoc_gin on [TABLE] using GIN (jdoc)
 
-Where `[TABLE]` is the Mongo collection name. 
+Where `[TABLE]` is the Mongo collection name all in lowercase. 
 
-E.g. for the collection `audit.accountHistory` you need to create a table called `accountHistory` and an index `accountHistory_jdoc_gin`.
+E.g. for the collection `audit.accountHistory` you need to create a table called `accounthistory` and an index `accounthistory_jdoc_gin`.
 
 ## Running
 
