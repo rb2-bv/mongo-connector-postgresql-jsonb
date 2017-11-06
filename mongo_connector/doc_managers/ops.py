@@ -41,7 +41,7 @@ def bulk_upsert(cursor, docs, namespace, timestamp):
             for doc in chunk:
                 upserts.append((_id_from_doc(doc), doc))
             table = _table_from_namespace(namespace)
-            return sql.bulk_upsert(cursor, table, upserts)
+            sql.bulk_upsert(cursor, table, upserts)
     except Exception as e:
         raise e
 
