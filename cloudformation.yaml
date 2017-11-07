@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: MongoDB to Postgres Connector - Must use an Ubuntu AMI
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VpcId of your existing Virtual Private Cloud (VPC)
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet in which to run
+  Stack:
+    Description: Application stack
+    Type: String
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+  Stage:
+    Description: Environment name
+    Type: String
+    AllowedValues:
+      - CODE
+      - PROD
+    Default: CODE
+  InstanceType:
+    Type: String
+    Description: EC2 instance type
+    AllowedValues:
+    - t2.micro
+    - t2.medium
+    - m3.medium
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: t2.micro
+  ImageId:
+    Description: AMI ID
+    Type: String
+  App:
+    Description: Application name
+    Type: String
+    Default: identity-connector
+
+Resources:
+  AppRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: PrivateBucket
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource:
+            - !Sub arn:aws:s3:::identity-private-config/${Stage}/identity-connector/*
+            - arn:aws:s3:::github-public-keys/*
+      - PolicyName: PushLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+              - logs:*
+            Resource:
+              - arn:aws:logs:*:*:*
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - !Ref 'AppRole'
+  IdentityConnector:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          sources:
+            "/opt/connector": https://github.com/guardian/mongo-connector-postgresql-jsonb/tarball/master
+          files:
+            /etc/systemd/system/identity-connector.service:
+              content: |
+                [Unit]
+                Description=identity-connector
+                After=syslog.target
+
+                [Service]
+                Restart=always
+                ExecStart=/usr/local/bin/mongo-connector -c config.json
+                WorkingDirectory=/opt/connector/
+                Environment=PYTHONPATH=/opt/connector
+
+                [Install]
+                WantedBy=multi-user.target
+              mode: '0660'
+              owner: root
+              group: root
+    Properties:
+      ImageId: !Ref 'ImageId'
+      InstanceType:
+        Ref: InstanceType
+      IamInstanceProfile: !Ref 'InstanceProfile'
+      SecurityGroupIds:
+      - sg-267bbb42
+      SubnetId:
+        Ref: SubnetId
+      KeyName:
+        Ref: KeyName
+      Tags:
+        -
+          Key: "Name"
+          Value: !Sub ${Stage}:identity-connector
+      UserData:
+        Fn::Base64: !Sub |
+          #!bin/bash -xe
+          exec > /var/log/userdata.log 2>&1
+          apt-get update
+          apt-get -y install python-setuptools python-pip nfs-common
+          easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+          /usr/local/bin/cfn-init -v --stack ${AWS::StackId} --resource IdentityConnector --region ${AWS::Region}
+          mkdir /var/state
+          /opt/cloudwatch-logs/configure-logs application ${AWS::StackId} ${Stage} ${App} /var/log/mongo-connector.log
+          cd /opt/connector
+          aws s3 cp s3://identity-private-config/${Stage}/identity-connector/config.json /opt/connector/config.json
+          pip install -r /opt/connector/requirements.txt
+          systemctl daemon-reload
+          systemctl enable identity-connector.service
+          systemctl start identity-connector.service
+          /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource IdentityConnector --region ${AWS::Region}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
