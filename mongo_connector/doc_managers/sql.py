@@ -10,11 +10,16 @@ from psycopg2.extras import Json
 from bson.objectid import ObjectId
 
 log = logging.getLogger("psycopg2")
+epoch = datetime.utcfromtimestamp(0)
+
+
+def unix_time_millis(dt):
+    return int(round((dt - epoch).total_seconds() * 1000))
 
 
 def custom_serializer(obj):
     if isinstance(obj, (date, datetime)):
-        return obj.isoformat()
+        return unix_time_millis(obj)
     elif isinstance(obj, ObjectId):
         return str(obj)
     raise TypeError("%s is not JSON serializable" % type(obj))

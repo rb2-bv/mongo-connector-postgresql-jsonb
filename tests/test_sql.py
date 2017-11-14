@@ -88,6 +88,10 @@ class TestSql(TestCase):
         oid = ObjectId()
         self.assertEqual(sql.custom_serializer(oid), str(oid))
 
+    def test_custom_serializer_datetime(self):
+        date = datetime(1970, 1, 1, 00, 00, 42)
+        self.assertEqual(sql.custom_serializer(date), 42000)
+
 
 
 if __name__ == '__main__':

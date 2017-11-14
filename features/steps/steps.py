@@ -2,6 +2,7 @@
 
 import subprocess
 import time
+import datetime
 import uuid
 
 import psycopg2
@@ -266,3 +267,27 @@ def step_impl(context):
         find_by_id_and_assert_equal(context,str(context.document_id_that_exists), expected_document)
 
     eventually(check_id_is_a_string)
+
+
+@given("a document is inserted into mongo with a ISODate field")
+def step_impl(context):
+    document = {
+        '_id': str(uuid.uuid4()),
+        'dateValue': datetime.datetime.utcfromtimestamp(42),
+        'boxedValue': {
+            'box': 'foobar'
+        }
+    }
+    context.expected_document = document
+    context.document_id_that_exists = context.mongo_col.insert_one(document).inserted_id
+
+
+@then("the date field is stored as a number")
+def step_impl(context):
+    def date_is_epoch_millis():
+        with context.pg_client.cursor() as cursor:
+            cursor.execute(sql.SQL('select jdoc from collection1 where id=%s'), (context.document_id_that_exists,))
+            doc = cursor.fetchone()[0]
+            assert_that(doc['dateValue'], equal_to(42000))
+
+    eventually(date_is_epoch_millis)

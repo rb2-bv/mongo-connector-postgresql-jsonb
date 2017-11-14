@@ -42,3 +42,8 @@ Feature: Mongo Postgres Jsonb Connector
     Given a document is inserted into mongo with an ObjectId '_id' field
     When the document is copied to postgres
     Then the '_id' field is stored as a string
+
+  Scenario: ISODates are stored as numbers (milliseconds since epoch)
+    Given a document is inserted into mongo with a ISODate field
+    When the document is copied to postgres
+    Then the date field is stored as a number
