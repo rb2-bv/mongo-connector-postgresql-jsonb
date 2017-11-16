@@ -4,7 +4,7 @@ from unittest import TestCase, main
 import psycopg2.sql as psql
 from mongo_connector.doc_managers import sql
 from mock import MagicMock, Mock
-from datetime import datetime
+import datetime
 from psycopg2.extras import Json as PsyCopJson
 from bson.objectid import ObjectId
 
@@ -60,7 +60,7 @@ class TestSql(TestCase):
         cursor_mock.execute.assert_called_with(expected_sql, ('1234',))
 
     def test_default_marshaller(self):
-        document = {'foo': 'bar', "box": {'life': datetime.now()}}
+        document = {'foo': 'bar', "box": {'life': datetime.datetime.now()}}
         json = sql.default_marshaller(document)
         self.assertEqual(json.getquoted(), PsyCopJson(document, sql.dumps_json).getquoted())
 
@@ -88,6 +88,13 @@ class TestSql(TestCase):
         oid = ObjectId()
         self.assertEqual(sql.custom_serializer(oid), str(oid))
 
+    def test_custom_serializer_datetime(self):
+        date_value = datetime.datetime(2014, 12, 1, 12, 30, 42, 12344)
+        self.assertEqual(sql.custom_serializer(date_value), "2014-12-01T12:30:42Z")
+
+    def test_custom_serializer_date(self):
+        date_value = datetime.date(2017, 1, 1)
+        self.assertEqual(sql.custom_serializer(date_value), "2017-01-01T00:00:00Z")
 
 
 if __name__ == '__main__':
