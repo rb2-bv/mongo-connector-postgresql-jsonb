@@ -37,7 +37,7 @@ def split_every(n, iterable):
 def bulk_upsert(cursor, docs, namespace, timestamp):
     try:
         with cursor as c:
-            for chunk in split_every(500, docs):
+            for chunk in split_every(5000, docs):
                 upserts = []
                 for doc in chunk:
                     upserts.append((_id_from_doc(doc), doc))
