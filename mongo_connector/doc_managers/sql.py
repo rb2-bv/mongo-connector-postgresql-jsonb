@@ -35,9 +35,11 @@ def bulk_upsert(cursor, table, docs, marshaller=default_marshaller):
     try:
         inserts = []
         for id, doc in docs:
-            inserts.append(
-                cursor.mogrify("(%s, %s)", (id, marshaller(doc))).decode()
-            )
+            try:
+                marshalled_doc = marshaller(doc)
+                inserts.append(cursor.mogrify("(%s, %s)", (id, marshalled_doc)).decode())
+            except Exception as e:
+                log.error("Failed to marshall %s, document will be discarded", doc, traceback.format_exc())
         log.debug(inserts)
         insert_string = ','.join(inserts)
         cmd = sql.SQL(
