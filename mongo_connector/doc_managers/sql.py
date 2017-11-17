@@ -29,17 +29,17 @@ def default_marshaller(obj):
 
 
 def bulk_upsert(cursor, table, docs, marshaller=default_marshaller):
-    inserts = []
-    for id, doc in docs:
-        inserts.append(
-            cursor.mogrify("(%s, %s)", (id, marshaller(doc))).decode()
-        )
-    log.debug(inserts)
-    insert_string = ','.join(inserts)
-    cmd = sql.SQL(
-        "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
-    ).format(sql.Identifier(table), sql.SQL(insert_string))
     try:
+        inserts = []
+        for id, doc in docs:
+            inserts.append(
+                cursor.mogrify("(%s, %s)", (id, marshaller(doc))).decode()
+            )
+        log.debug(inserts)
+        insert_string = ','.join(inserts)
+        cmd = sql.SQL(
+            "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
+        ).format(sql.Identifier(table), sql.SQL(insert_string))
         return cursor.execute(cmd)
     except Exception as e:
         log.error("Impossible to bulk upsert %s documents to %s \n %s", len(docs), table, traceback.format_exc())
