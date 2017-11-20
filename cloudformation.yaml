@@ -36,7 +36,12 @@ Parameters:
     Description: Application name
     Type: String
     Default: identity-connector
-
+Mappings:
+  StageVariables:
+    PROD:
+      RDSClientSecurityGroupId: sg-f433b78f
+    CODE:
+      RDSClientSecurityGroupId: sg-ce0783b5
 Resources:
   AppRole:
     Type: AWS::IAM::Role
@@ -107,6 +112,7 @@ Resources:
       IamInstanceProfile: !Ref 'InstanceProfile'
       SecurityGroupIds:
       - sg-267bbb42
+      - !FindInMap [StageVariables, !Ref 'Stage', RDSClientSecurityGroupId]
       SubnetId:
         Ref: SubnetId
       KeyName:
