@@ -64,8 +64,7 @@ def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
 def update(cursor, table, document_id, update_path, new_value, marshaller=default_marshaller):
     cmd = sql.SQL("update {} set jdoc=jsonb_set(jdoc, %s, %s::jsonb, true) where id = %s").format(sql.Identifier(table))
     try:
-        with cursor as c:
-            return c.execute(cmd, (update_path, marshaller(new_value), document_id))
+        return cursor.execute(cmd, (update_path, marshaller(new_value), document_id))
     except Exception as e:
         log.error("Failed to update %s with path: %s value: %s \n %s", document_id, update_path, new_value, traceback.format_exc())
 

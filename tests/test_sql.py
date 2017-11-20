@@ -70,7 +70,7 @@ class TestSql(TestCase):
             [psql.SQL('update '), psql.Identifier('users'), psql.SQL(' set jdoc=jsonb_set(jdoc, %s, %s::jsonb, true) where id = %s')]
         )
         sql.update(cursor_wrapper, 'users', '1234', '{details,email}', 'foo@example.com', self.identity_marshaller)
-        cursor_mock.execute.assert_called_with(expected_sql, ('{details,email}', 'foo@example.com', '1234'))
+        cursor_wrapper.execute.assert_called_with(expected_sql, ('{details,email}', 'foo@example.com', '1234'))
 
     def test_bulk_upsert(self):
         cursor_wrapper, cursor_mock = self.mock_cursor()

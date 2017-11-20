@@ -57,9 +57,10 @@ def update(cursor, document_id, update_spec, namespace):
     table = _table_from_namespace(namespace)
     if update_spec.get("$set"):
         updates = update_to_path_and_value(update_spec)
-        for (path, value) in updates:
-            log.debug('Updating path: {} with value: {}'.format(path, value))
-            sql.update(cursor, table, document_id, path, value)
+        with cursor as c:
+            for (path, value) in updates:
+                log.debug('Updating path: {} with value: {}'.format(path, value))
+                sql.update(c, table, document_id, path, value)
     if update_spec.get("$unset"):
         keys_to_unset = update_spec.get("$unset").keys()
         sql.remove_keys(cursor, table, document_id, keys_to_unset)
