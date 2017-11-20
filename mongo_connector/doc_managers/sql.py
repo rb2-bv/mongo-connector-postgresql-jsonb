@@ -15,7 +15,7 @@ log = logging.getLogger("psycopg2")
 def custom_serializer(obj):
     try:
         if isinstance(obj, (date, datetime)):
-            return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
+            return obj.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         elif isinstance(obj, ObjectId):
             return str(obj)
         raise TypeError("%s is not JSON serializable" % type(obj))

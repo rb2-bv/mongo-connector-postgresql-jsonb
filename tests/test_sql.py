@@ -89,12 +89,12 @@ class TestSql(TestCase):
         self.assertEqual(sql.custom_serializer(oid), str(oid))
 
     def test_custom_serializer_datetime(self):
-        date_value = datetime.datetime(2014, 12, 1, 12, 30, 42, 12344)
-        self.assertEqual(sql.custom_serializer(date_value), "2014-12-01T12:30:42Z")
+        date_value = datetime.datetime(2014, 12, 1, 12, 30, 42, 123444)
+        self.assertEqual(sql.custom_serializer(date_value), "2014-12-01T12:30:42.123Z")
 
     def test_custom_serializer_date(self):
         date_value = datetime.date(2017, 1, 1)
-        self.assertEqual(sql.custom_serializer(date_value), "2017-01-01T00:00:00Z")
+        self.assertEqual(sql.custom_serializer(date_value), "2017-01-01T00:00:00.000Z")
 
 
 if __name__ == '__main__':
