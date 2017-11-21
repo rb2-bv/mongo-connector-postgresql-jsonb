@@ -18,9 +18,9 @@ def custom_serializer(obj):
             return obj.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         elif isinstance(obj, ObjectId):
             return str(obj)
-        raise TypeError("%s is not JSON serializable" % type(obj))
+        raise TypeError(u"%s is not JSON serializable" % type(obj))
     except Exception as e:
-        log.error("Failed to serialize %s", obj, traceback.format_exc())
+        log.error(u"Failed to serialize %s", obj, traceback.format_exc())
         raise e
 
 def dumps_json(obj):
@@ -39,7 +39,7 @@ def bulk_upsert(cursor, table, docs, marshaller=default_marshaller):
                 marshalled_doc = marshaller(doc)
                 inserts.append(cursor.mogrify("(%s, %s)", (id, marshalled_doc)).decode())
             except Exception as e:
-                log.error("Failed to marshall %s, document will be discarded", doc, traceback.format_exc())
+                log.error(u"Failed to marshall %s, document will be discarded", doc, traceback.format_exc())
         log.debug(inserts)
         insert_string = ','.join(inserts)
         cmd = sql.SQL(
@@ -47,7 +47,7 @@ def bulk_upsert(cursor, table, docs, marshaller=default_marshaller):
         ).format(sql.Identifier(table), sql.SQL(insert_string))
         return cursor.execute(cmd)
     except Exception as e:
-        log.error("Impossible to bulk upsert %s documents to %s \n %s", len(docs), table, traceback.format_exc())
+        log.error(u"Impossible to bulk upsert %s documents to %s \n %s", len(docs), table, traceback.format_exc())
 
 
 def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
@@ -58,7 +58,7 @@ def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
         with cursor as c:
             return c.execute(cmd, (doc_id, marshaller(doc), marshaller(doc)))
     except Exception as e:
-        log.error("Impossible to upsert %s to %s \n %s", doc, table, traceback.format_exc())
+        log.error(u"Impossible to upsert %s to %s \n %s", doc, table, traceback.format_exc())
 
 
 def update(cursor, table, document_id, update_path, new_value, marshaller=default_marshaller):
@@ -66,7 +66,7 @@ def update(cursor, table, document_id, update_path, new_value, marshaller=defaul
     try:
         return cursor.execute(cmd, (update_path, marshaller(new_value), document_id))
     except Exception as e:
-        log.error("Failed to update %s with path: %s value: %s \n %s", document_id, update_path, new_value, traceback.format_exc())
+        log.error(u"Failed to update %s with path: %s value: %s \n %s", document_id, update_path, new_value, traceback.format_exc())
 
 
 def remove_keys(cursor, table, document_id, keys):
@@ -75,10 +75,10 @@ def remove_keys(cursor, table, document_id, keys):
         with cursor as c:
             for key in keys:
                 json_path = '{' + key.replace('.', ',') + '}'
-                log.debug("Removing field at path {} from {}".format(json_path, document_id))
+                log.debug(u"Removing field at path {} from {}".format(json_path, document_id))
                 c.execute(cmd, (json_path, document_id))
     except Exception as e:
-        log.error("Failed to remove %s from %s \n %s", keys, document_id, traceback.format_exc())
+        log.error(u"Failed to remove %s from %s \n %s", keys, document_id, traceback.format_exc())
 
 
 def delete(cursor, table, doc_id):
@@ -87,4 +87,4 @@ def delete(cursor, table, doc_id):
         with cursor as c:
             return c.execute(cmd, (doc_id,))
     except Exception as e:
-        log.error("Impossible to delete doc %s from %s \n %s", doc_id, table, traceback.format_exc())
+        log.error(u"Impossible to delete doc %s from %s \n %s", doc_id, table, traceback.format_exc())
