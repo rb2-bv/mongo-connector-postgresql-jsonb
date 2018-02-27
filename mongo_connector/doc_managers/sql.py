@@ -9,7 +9,7 @@ from psycopg2 import sql
 from psycopg2.extras import Json
 from bson.objectid import ObjectId
 
-log = logging.getLogger("psycopg2")
+log = logging.getLogger(__name__)
 
 
 def custom_serializer(obj):
@@ -40,7 +40,7 @@ def bulk_upsert(cursor, table, docs, marshaller=default_marshaller):
                 inserts.append(cursor.mogrify("(%s, %s)", (id, marshalled_doc)).decode())
             except Exception as e:
                 log.error(u"Failed to marshall %s, document will be discarded", doc, traceback.format_exc())
-        log.debug(inserts)
+        log.info("Bulk upserting {} documents to {}".format(len(inserts), table))
         insert_string = ','.join(inserts)
         cmd = sql.SQL(
             "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
