@@ -6,8 +6,9 @@ from . import sql
 from bson.objectid import ObjectId
 from itertools import islice
 
-log = logging.getLogger("ops")
-
+log = logging.getLogger(__name__)
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
 
 def _id_from_doc(doc):
     try:
@@ -34,15 +35,17 @@ def split_every(n, iterable):
         piece = list(islice(i, n))
 
 
-def bulk_upsert(cursor, docs, namespace, timestamp):
+def bulk_upsert(client, docs, namespace, timestamp):
+    pool = ThreadPool(processes=8)
     try:
-        with cursor as c:
-            for chunk in split_every(15000, docs):
-                upserts = []
-                for doc in chunk:
-                    upserts.append((_id_from_doc(doc), doc))
-                table = _table_from_namespace(namespace)
-                sql.bulk_upsert(c, table, upserts)
+        for chunk in split_every(500, docs):
+            upserts = []
+            for doc in chunk:
+                upserts.append((_id_from_doc(doc), doc))
+            table = _table_from_namespace(namespace)
+            pool.apply_async(sql.bulk_upsert, (client, table, upserts))
+        pool.close()
+        pool.join()
     except Exception as e:
         raise e
 

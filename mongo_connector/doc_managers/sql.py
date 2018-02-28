@@ -31,21 +31,22 @@ def default_marshaller(obj):
     return Json(obj, dumps=dumps_json)
 
 
-def bulk_upsert(cursor, table, docs, marshaller=default_marshaller):
+def bulk_upsert(client, table, docs, marshaller=default_marshaller):
     try:
         inserts = []
-        for id, doc in docs:
-            try:
-                marshalled_doc = marshaller(doc)
-                inserts.append(cursor.mogrify("(%s, %s)", (id, marshalled_doc)).decode())
-            except Exception as e:
-                log.error(u"Failed to marshall %s, document will be discarded", doc, traceback.format_exc())
-        log.info("Bulk upserting {} documents to {}".format(len(inserts), table))
-        insert_string = ','.join(inserts)
-        cmd = sql.SQL(
-            "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
-        ).format(sql.Identifier(table), sql.SQL(insert_string))
-        return cursor.execute(cmd)
+        with client.cursor() as c:
+            for id, doc in docs:
+                try:
+                    marshalled_doc = marshaller(doc)
+                    inserts.append(c.mogrify("(%s, %s)", (id, marshalled_doc)).decode())
+                except Exception as e:
+                    log.error(u"Failed to marshall %s, document will be discarded", doc, traceback.format_exc())
+            log.info("Bulk upserting {} documents to {}".format(len(inserts), table))
+            insert_string = ','.join(inserts)
+            cmd = sql.SQL(
+                "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
+            ).format(sql.Identifier(table), sql.SQL(insert_string))
+            return c.execute(cmd)
     except Exception as e:
         log.error(u"Impossible to bulk upsert %s documents to %s \n %s", len(docs), table, traceback.format_exc())
 
