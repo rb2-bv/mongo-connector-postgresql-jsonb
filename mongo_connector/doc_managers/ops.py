@@ -7,8 +7,6 @@ from bson.objectid import ObjectId
 from itertools import islice
 
 log = logging.getLogger(__name__)
-from multiprocessing import Pool
-from multiprocessing.dummy import Pool as ThreadPool
 
 def _id_from_doc(doc):
     try:
@@ -26,26 +24,10 @@ def _table_from_namespace(namespace):
         raise ValueError('Namespaces must be of the form namespace.collection, got:{}'.format(namespace))
 
 
-def split_every(n, iterable):
-    # https://stackoverflow.com/questions/1915170
-    i = iter(iterable)
-    piece = list(islice(i, n))
-    while piece:
-        yield piece
-        piece = list(islice(i, n))
-
-
 def bulk_upsert(client, docs, namespace, timestamp):
-    pool = ThreadPool(processes=8)
     try:
-        for chunk in split_every(500, docs):
-            upserts = []
-            for doc in chunk:
-                upserts.append((_id_from_doc(doc), doc))
-            table = _table_from_namespace(namespace)
-            pool.apply_async(sql.bulk_upsert, (client, table, upserts))
-        pool.close()
-        pool.join()
+        table = _table_from_namespace(namespace)
+        sql.bulk_upsert(client, table, docs)
     except Exception as e:
         raise e
 

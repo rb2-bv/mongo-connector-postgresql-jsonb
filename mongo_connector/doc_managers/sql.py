@@ -8,8 +8,17 @@ from datetime import date, datetime
 from psycopg2 import sql
 from psycopg2.extras import Json
 from bson.objectid import ObjectId
+from itertools import islice
 
 log = logging.getLogger(__name__)
+
+
+def _id_from_doc(doc):
+    try:
+        id = doc['_id']  # TODO support object ID as well
+        return str(id)
+    except KeyError:
+        raise ValueError('Document did not contain an `_id` key. \n {}'.format(doc))
 
 
 def custom_serializer(obj):
@@ -31,24 +40,35 @@ def default_marshaller(obj):
     return Json(obj, dumps=dumps_json)
 
 
+def split_every(n, iterable):
+    # https://stackoverflow.com/questions/1915170
+    i = iter(iterable)
+    piece = list(islice(i, n))
+    while piece:
+        yield piece
+        piece = list(islice(i, n))
+
+
 def bulk_upsert(client, table, docs, marshaller=default_marshaller):
-    try:
-        inserts = []
-        with client.cursor() as c:
-            for id, doc in docs:
-                try:
-                    marshalled_doc = marshaller(doc)
-                    inserts.append(c.mogrify("(%s, %s)", (id, marshalled_doc)).decode())
-                except Exception as e:
-                    log.error(u"Failed to marshall %s, document will be discarded", doc, traceback.format_exc())
-            log.info("Bulk upserting {} documents to {}".format(len(inserts), table))
-            insert_string = ','.join(inserts)
-            cmd = sql.SQL(
-                "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
-            ).format(sql.Identifier(table), sql.SQL(insert_string))
-            return c.execute(cmd)
-    except Exception as e:
-        log.error(u"Impossible to bulk upsert %s documents to %s \n %s", len(docs), table, traceback.format_exc())
+    for chunk in split_every(250, docs):
+        try:
+            inserts = []
+            with client.cursor() as c:
+                for doc in chunk:
+                    try:
+                        doc_id = _id_from_doc(doc)
+                        marshalled_doc = marshaller(doc)
+                        inserts.append(c.mogrify("(%s, %s)", (doc_id, marshalled_doc)).decode())
+                    except Exception as e:
+                        log.error(u"Failed to marshall %s, document will be discarded", doc, traceback.format_exc())
+                log.info("Bulk upserting {} documents to {}".format(len(inserts), table))
+                insert_string = ','.join(inserts)
+                cmd = sql.SQL(
+                    "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
+                ).format(sql.Identifier(table), sql.SQL(insert_string))
+                c.execute(cmd)
+        except Exception as e:
+            log.error(u"Impossible to bulk upsert %s documents to %s \n %s", len(docs), table, traceback.format_exc())
 
 
 def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
