@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='mongo-connector-postgresql-jsonb',
-    version='0.0.1',
+    version='0.0.2',
     description='Doc Manager Postgresl for Mongo connector Distribution Utilities',
     keywords=['mongo-connector', 'mongo', 'mongodb', 'postgresql'],
     platforms=["any"],

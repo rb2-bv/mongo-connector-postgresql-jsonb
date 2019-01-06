@@ -64,7 +64,7 @@ def bulk_upsert(client, table, docs, marshaller=default_marshaller):
                 log.info("Bulk upserting {} documents to {}".format(len(inserts), table))
                 insert_string = ','.join(inserts)
                 cmd = sql.SQL(
-                    "insert into {} (id, jdoc) values {} on conflict (id) do update set jdoc = excluded.jdoc"
+                    "insert into {} (id, data) values {} on conflict (id) do update set data = excluded.data"
                 ).format(sql.Identifier(table), sql.SQL(insert_string))
                 c.execute(cmd)
         except Exception as e:
@@ -73,7 +73,7 @@ def bulk_upsert(client, table, docs, marshaller=default_marshaller):
 
 def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
     cmd = sql.SQL(
-        "insert into {} (id, jdoc) values (%s, %s) on conflict (id) do update set jdoc = %s"
+        "insert into {} (id, data) values (%s, %s) on conflict (id) do update set data = %s"
     ).format(sql.Identifier(table))
     try:
         with cursor as c:
@@ -83,7 +83,7 @@ def upsert(cursor, table, doc_id, doc, marshaller=default_marshaller):
 
 
 def update(cursor, table, document_id, update_path, new_value, marshaller=default_marshaller):
-    cmd = sql.SQL("update {} set jdoc=jsonb_set(jdoc, %s, %s::jsonb, true) where id = %s").format(sql.Identifier(table))
+    cmd = sql.SQL("update {} set data=jsonb_set(data, %s, %s::jsonb, true) where id = %s").format(sql.Identifier(table))
     try:
         return cursor.execute(cmd, (update_path, marshaller(new_value), document_id))
     except Exception as e:
@@ -91,7 +91,7 @@ def update(cursor, table, document_id, update_path, new_value, marshaller=defaul
 
 
 def remove_keys(cursor, table, document_id, keys):
-    cmd = sql.SQL("update {} set jdoc=(jdoc #- %s) where id = %s").format(sql.Identifier(table))
+    cmd = sql.SQL("update {} set data=(data #- %s) where id = %s").format(sql.Identifier(table))
     try:
         with cursor as c:
             for key in keys:

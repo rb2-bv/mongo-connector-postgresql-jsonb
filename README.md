@@ -10,8 +10,8 @@ to migrate data from Mongo to Postgres.
 
 For each specified collection, you must create the following schema in Postgres:
 
-    create table [TABLE] (id string PRIMARY KEY, jdoc jsonb)
-    create index [TABLE]_jdoc_gin on [TABLE] using GIN (jdoc)
+    create table [TABLE] (id string PRIMARY KEY, data jsonb)
+    create index [TABLE]_data_gin on [TABLE] using GIN (data)
 
 Where `[TABLE]` is the Mongo collection name all in lowercase. 
 
